@@ -1,0 +1,61 @@
+name: Build ec-order-service for STG
+run-name: 'Build e-commerce-order-service and push Docker image for Staging'
+
+on:
+  push:
+    branches:
+      - master
+      - 'release/homelab/*'
+
+concurrency:
+  group: 'build-staging'
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & Push
+    runs-on: stg-ci-runner-set
+    environment: staging
+    steps:
+      - name: Discord start notification
+        uses: devops-framework/iac-vagrant-k8s-cluster-local/.github/actions/discord-notifier@dev
+        with:
+          webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          status: 'start'
+          title: '🚀 Start build e-commerce-order-service'
+          message: |
+            **Actor:** ${{ github.actor }}
+            **Action:** On-push
+            **Branch:** `${{ github.ref_name }}`
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set short SHA
+        id: get-short-sha
+        run: echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+      - name: Run Docker Build & Push
+        id: docker-build-push
+        uses: devops-framework/iac-vagrant-k8s-cluster-local/.github/actions/dockerhub-build-push@dev
+        with:
+          docker_username: ${{ secrets.DOCKER_USERNAME }}
+          docker_password: ${{ secrets.DOCKER_PASSWORD }}
+          image_name: "e-commerce-order-service"
+          image_tag: "gha-staging-${{ github.ref_name }}-${{ steps.get-short-sha.outputs.short_sha }}"
+          dockerfile_path: "./devops/ci/docker/staging/Dockerfile"
+
+      - name: Discord result notification
+        if: always()
+        uses: devops-framework/iac-vagrant-k8s-cluster-local/.github/actions/discord-notifier@dev
+        with:
+          webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          status: ${{ job.status }}
+          title: 'Build has been completed'
+          message: |
+            **Status:** ${{ job.status }}
+            **Actor:** ${{ github.actor }}
+            **Action:** On-push
+            **Branch:** `${{ github.ref_name }}`
+            **Image Tag:** `gha-staging-${{ github.ref_name }}-${{ steps.get-short-sha.outputs.short_sha }}`
+            **Docker Hub:** ${{ steps.docker-build-push.outputs.dockerhub_url }}

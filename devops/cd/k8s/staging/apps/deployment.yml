@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+  namespace: ec-stg
+  labels:
+    app: order-service
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: order-service
+  template:
+    metadata:
+      labels:
+        app: order-service
+    spec:
+      containers:
+        - name: order-service
+          # Thay thế bằng tên image thực tế của bạn sau khi build
+          image: tantran0411/e-commerce-order-service:homelab-v1
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            # Mount file config vào đúng đường dẫn đã định nghĩa trong Dockerfile
+            - name: config-volume
+              mountPath: /app/config
+              readOnly: true
+          env:
+            # Đảm bảo biến môi trường trỏ đúng file (dù Dockerfile đã set, set lại ở đây cho rõ ràng)
+            - name: CONFIG_FILE_PATH
+              value: "/app/config/config.xml"
+      volumes:
+        - name: config-volume
+          configMap:
+            name: order-service-config
+            items:
+              - key: config.xml
+                path: config.xml
