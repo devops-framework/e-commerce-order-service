@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: order-service-config
-  namespace: ec-stg
+  namespace: backend-stg
 data:
   config.xml: |
     <?xml version="1.0" encoding="UTF-8"?>
