@@ -77,4 +77,4 @@ jobs:
             **Action:** Manual
             **Branch:** `${{ github.ref_name }}`
             **Image Tag:** [${{ steps.get-image-tag.outputs.image_tag || 'None' }}](${{ steps.docker-build-push.outputs.dockerhub_url }})
-            **Manifest Change:** ${{ steps.auto-commit-step.outputs.changes_detected == 'true' && format('[steps.auto-commit-step.outputs.commit_hash](https://github.com/{0}/commit/{1})', github.repository, steps.auto-commit-step.outputs.commit_hash) || 'None' }}
+            **Manifest Change:** ${{ steps.auto-commit-step.outputs.changes_detected == 'true' && format('[${{ steps.auto-commit-step.outputs.commit_hash }}](https://github.com/{0}/commit/{1})', github.repository, steps.auto-commit-step.outputs.commit_hash) || 'No changes' }}
