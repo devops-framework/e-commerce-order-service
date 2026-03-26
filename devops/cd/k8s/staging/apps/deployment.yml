@@ -33,6 +33,25 @@ spec:
             # Đảm bảo biến môi trường trỏ đúng file (dù Dockerfile đã set, set lại ở đây cho rõ ràng)
             - name: CONFIG_FILE_PATH
               value: "/app/config/config.xml"
+          livenessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
       volumes:
         - name: config-volume
           configMap:

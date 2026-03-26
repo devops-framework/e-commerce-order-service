@@ -28,7 +28,7 @@ jobs:
           title: '🚀 Start build e-commerce-order-service'
           message: |
             **Actor:** ${{ github.actor }}
-            **Action:** Manual
+            **Action:** On-push
             **Branch:** `${{ github.ref_name }}`
 
       - name: Checkout code
@@ -80,7 +80,7 @@ jobs:
           message: |
             **Status:** ${{ job.status }}
             **Actor:** ${{ github.actor }}
-            **Action:** Manual
+            **Action:** On-push
             **Branch:** `${{ github.ref_name }}`
             **Image Tag:** [${{ steps.get-image-tag.outputs.image_tag || 'None' }}](${{ steps.docker-build-push.outputs.dockerhub_url }})
             **Manifest Change:** ${{ steps.auto-commit-step.outputs.changes_detected == 'true' && format('[{1}](https://github.com/{0}/commit/{1})', github.repository, steps.auto-commit-step.outputs.commit_hash) || 'No changes' }}
