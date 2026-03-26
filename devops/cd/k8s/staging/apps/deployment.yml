@@ -35,13 +35,13 @@ spec:
               value: "/app/config/config.xml"
           livenessProbe:
             httpGet:
-              path: /healthcheck
+              path: /api/healthcheck
               port: 8080
             initialDelaySeconds: 60
             periodSeconds: 15
           readinessProbe:
             httpGet:
-              path: /healthcheck
+              path: /api/healthcheck
               port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10
