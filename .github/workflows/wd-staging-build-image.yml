@@ -1,5 +1,5 @@
-name: Manual build ec-order-service for STG
-run-name: 'Build e-commerce-order-service and push Docker image for Staging'
+name: Manual Build Back for STG
+run-name: 'Build e-commerce-order-service and push image for Staging'
 
 on:
   workflow_dispatch:
@@ -10,53 +10,12 @@ concurrency:
 
 jobs:
   build:
-    name: Build & Push
-    runs-on: stg-ci-runner-set
-    environment: staging
-    steps:
-      - name: Discord start notification
-        uses: devops-framework/iac-vagrant-k8s-cluster-local/.github/actions/discord-notifier@dev
-        with:
-          webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          status: 'start'
-          title: '🚀 Start build e-commerce-order-service'
-          message: |
-            **Actor:** ${{ github.actor }}
-            **Action:** Manual
-            **Branch:** `${{ github.ref_name }}`
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GIHUB_PAT }}
-          fetch-depth: 0
-
-      - name: Set IMAGE_TAG
-        id: get-image-tag
-        run: |
-          echo "short_sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
-          echo "image_tag=gha-staging-${{ github.ref_name }}-${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
-
-      - name: Run Docker Build & Push
-        id: docker-build-push
-        uses: devops-framework/iac-vagrant-k8s-cluster-local/.github/actions/dockerhub-build-push@dev
-        with:
-          docker_username: ${{ secrets.DOCKER_USERNAME }}
-          docker_password: ${{ secrets.DOCKER_PASSWORD }}
-          image_name: "e-commerce-order-service"
-          image_tag: ${{ steps.get-image-tag.outputs.image_tag }}
-          dockerfile_path: "./devops/ci/docker/staging/Dockerfile"
-
-      - name: Discord result notification
-        if: always()
-        uses: devops-framework/iac-vagrant-k8s-cluster-local/.github/actions/discord-notifier@dev
-        with:
-          webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          status: ${{ job.status }}
-          title: 'Build has been completed'
-          message: |
-            **Status:** ${{ job.status }}
-            **Actor:** ${{ github.actor }}
-            **Action:** Manual
-            **Branch:** `${{ github.ref_name }}`
-            **Image Tag:** [${{ steps.get-image-tag.outputs.image_tag || 'None' }}](${{ steps.docker-build-push.outputs.dockerhub_url }})
+    name: e-commerce-storeback-order-service
+    uses: devops-framework/iac-vagrant-k8s-cluster-local/.github/workflows/wc-reusable-manual-build-image.yml@dev
+    permissions:
+      contents: write
+    with:
+      app_name: 'e-commerce-order-service'
+      gha_environment: staging
+      dockerfile_path: "./devops/ci/docker/staging/Dockerfile"
+    secrets: inherit
