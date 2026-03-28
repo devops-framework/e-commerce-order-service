@@ -7,21 +7,34 @@ on:
       - master
       - 'release/homelab/*'
     paths-ignore:
-      - 'devops/**'
+      - 'devops/cd/**'
       - '.github/**'
+      - 'README.md'
+      - '.gitignore'
 
 concurrency:
   group: 'build-staging'
   cancel-in-progress: true
 
 jobs:
-  build:
+  build-deps:
+    name: e-commerce-storeback-order-service-deps
+    uses: ./.github/workflows/wc-reusable-build-deps.yml
+    permissions:
+      contents: read
+    secrets: inherit
+    with:
+      image_runtime: 'maven:3.8.4-openjdk-11-slim'
+
+  build-docker-image:
+    needs: build-deps
     name: e-commerce-storeback-order-service
-    uses: devops-framework/iac-vagrant-k8s-cluster-local/.github/workflows/wc-reusable-auto-build-image.yml@dev
+    uses: devops-framework/iac-vagrant-k8s-cluster-local/.github/workflows/wc-reusable-auto-build-image.yml@develop/homelab/add-reusable-build-deps
     permissions:
       contents: write
     with:
       app_name: 'e-commerce-order-service'
       gha_environment: staging
       dockerfile_path: "./devops/ci/docker/staging/Dockerfile"
+      deps_cache_key: ${{ needs.build-deps.outputs.cache-key }}
     secrets: inherit

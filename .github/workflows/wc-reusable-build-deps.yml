@@ -1,0 +1,75 @@
+name: Build Maven dependencies
+
+on:
+  workflow_call:
+    inputs:
+      image_runtime:
+        required: true
+        description: Runtime to use for the build (e.g., 'maven:3.9.4-eclipse-temurin-17-alpine')
+        type: string
+    outputs:
+      cache-key:
+        description: 'Cache key to use for actions/cache in caller'
+        value: ${{ jobs.check-deps.outputs.cache-key }}
+      cache-hit:
+        description: 'Whether the cache was hit during deps job'
+        value: ${{ jobs.check-deps.outputs.cache-hit }}
+
+jobs:
+  check-deps:
+    name: 🔎 Check existence cache
+    runs-on: stg-ci-runner-set
+    outputs:
+      cache-key: ${{ steps.compute_key.outputs.hash }}
+      cache-hit: ${{ steps.maven-cache.outputs.cache-hit }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          sparse-checkout: |
+            common-deps
+            
+      - name: Compute cache key from pom.xml + Java sources
+        id: compute_key
+        run: |
+          HASH=${{ hashFiles('common-deps/pom.xml') }}
+          echo "hash=maven-repo-$HASH" >> "$GITHUB_OUTPUT"
+          echo "Computed cache hash successfully: $HASH"
+
+      - name: Lookup Maven repository cache (no download)
+        id: maven-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ./.m2/repository
+          key: ${{ steps.compute_key.outputs.hash }}
+          lookup-only: true
+
+  build-deps:
+    name: 📦 Build & Cache
+    needs: check-deps
+    if: needs.check-deps.outputs.cache-hit != 'true'
+    runs-on: stg-ci-runner-set
+    container:
+      image: ${{ inputs.image_runtime }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve dependencies
+        run: |
+          echo "Cache miss — resolving dependencies into m2 local"
+          mvn -B dependency:go-offline -f common-deps/pom.xml -Dmaven.repo.local=./.m2/repository
+          mvn -B install -f common-deps/pom.xml -Dmaven.repo.local=./.m2/repository
+
+      - name: Save Maven repository to cache
+        uses: actions/cache/save@v4
+        with:
+          path: ./.m2/repository
+          key: ${{ needs.check-deps.outputs.cache-key }}
+
+      - name: Ensure m2 local exists
+        run: |
+          pwd
+          ls ./.m2/repository
+          ls -R ./.m2/repository/com/homelab

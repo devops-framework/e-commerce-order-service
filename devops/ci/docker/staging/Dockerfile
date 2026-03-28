@@ -4,12 +4,16 @@ WORKDIR /app
 
 # Vì Dockerfile nằm sâu, chúng ta phải đi ngược ra ngoài 4 cấp thư mục 
 # (stg1 -> dockerfile -> ci -> devops -> root)
-COPY ../../../../pom.xml .
-# Chạy verify để tải tất cả dependencies và plugins cần thiết cho lifecycle.
-RUN mvn -B verify clean --fail-never
+COPY pom.xml /app/pom.xml
 
-COPY ../../../../src ./src
-RUN mvn package -DskipTests -o
+# Nếu workflow đã phục hồi một cache maven vào .m2-cache trong context,
+# copy nó vào /app/.m2 trước khi mvn chạy. Workflow đảm bảo .m2-cache luôn tồn tại
+# (có thể rỗng) để COPY không fail.
+COPY ./.m2 /app/.m2
+# Tải trước các dependencies nếu cần. Nếu /app/.m2 đã có dependency thì bước này nhanh.
+
+COPY src /app/src
+RUN mvn package -DskipTests -Dmaven.repo.local=/app/.m2/repository
 
 # Stage 2: Runtime với Tomcat (như doanh nghiệp bạn hay dùng)
 FROM tomcat:10.1-jdk11-openjdk-slim
