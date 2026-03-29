@@ -19,17 +19,18 @@ concurrency:
 jobs:
   build-deps:
     name: e-commerce-storeback-order-service-deps
-    uses: ./.github/workflows/wc-reusable-build-deps.yml
+    uses: devops-framework/iac-vagrant-k8s-cluster-local/.github/workflows/wc-reusable-build-deps.yml@dev
     permissions:
       contents: read
     secrets: inherit
     with:
       image_runtime: 'maven:3.8.4-openjdk-11-slim'
+      module_path: 'common-deps'
 
   build-docker-image:
     needs: build-deps
     name: e-commerce-storeback-order-service
-    uses: devops-framework/iac-vagrant-k8s-cluster-local/.github/workflows/wc-reusable-auto-build-image.yml@develop/homelab/add-reusable-build-deps
+    uses: devops-framework/iac-vagrant-k8s-cluster-local/.github/workflows/wc-reusable-auto-build-image.yml@dev
     permissions:
       contents: write
     with:
