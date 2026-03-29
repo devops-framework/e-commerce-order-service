@@ -11,7 +11,7 @@ data:
             <!-- Cấu hình kết nối tới Product Service -->
             <!-- ConfigurationLoader hỗ trợ đọc nhiều key/value trong 1 entry -->
             <key>PRODUCT_SERVICE_HOST</key>
-            <value>product-service-svc</value>
+            <value>product-service</value>
             
             <key>PRODUCT_SERVICE_PORT</key>
             <value>8080</value>
